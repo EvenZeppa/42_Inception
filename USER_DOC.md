@@ -34,12 +34,12 @@ The Inception stack provides a complete web hosting solution with three services
 
 ### 4. Adminer (Bonus)
 - **What it does**: Web interface to manage the MariaDB database
-- **Access**: `https://your-domain.com/adminer`
+- **Access**: `https://ezeppa.42.fr/adminer`
 - **Login**: Server = `mariadb`, User = `root` (or SQL_USER from .env), Password = from `secrets/db_root_password.txt` (or `secrets/db_password.txt` for SQL_USER)
 
 ### 5. Static Site (Bonus)
 - **What it does**: Simple HTML/CSS showcase page
-- **Access**: `https://your-domain.com/portfolio`
+- **Access**: `https://ezeppa.42.fr/portfolio`
 
 ### 6. Redis (Bonus)
 - **What it does**: Object cache for WordPress (plugin redis-cache)
@@ -64,8 +64,8 @@ make up
 
 **Manual method**:
 ```bash
-cd /Users/dev/Documents/Workspace/Doker/Inception/srcs
-docker-compose up -d
+cd /home/ezeppa/Documents/Workspace/Inception/srcs
+docker compose up -d
 ```
 
 The `-d` flag runs containers in the background. Startup takes 10-30 seconds.
@@ -79,8 +79,8 @@ make down
 
 **Manual method**:
 ```bash
-cd /Users/dev/Documents/Workspace/Doker/Inception/srcs
-docker-compose down
+cd /home/ezeppa/Documents/Workspace/Inception/srcs
+docker compose down
 ```
 
 **Important**: `down` stops containers but preserves your data (stored in `/home/<login>/data/`).
@@ -104,10 +104,10 @@ make fclean
    
    Add this line:
    ```
-   127.0.0.1 your-domain.com
+   127.0.0.1 ezeppa.42.fr
    ```
    
-   (Replace `your-domain.com` with the domain in your `.env` file)
+   (Replace the hostname with the value of `DOMAIN_NAME` in your `.env` file)
 
 2. **Accept the SSL certificate warning** (it's self-signed and expected)
 
@@ -115,7 +115,7 @@ make fclean
 
 Open your browser and navigate to:
 ```
-https://your-domain.com
+https://ezeppa.42.fr
 ```
 
 You will see your WordPress website's home page.
@@ -124,7 +124,7 @@ You will see your WordPress website's home page.
 
 Navigate to:
 ```
-https://your-domain.com/wp-admin
+https://ezeppa.42.fr/wp-admin
 ```
 
 You will be prompted to log in.
@@ -150,7 +150,7 @@ All credentials are stored in:
 ### Credential Types
 
 **WordPress Admin User** (from `srcs/.env` and `secrets/wp_admin_password.txt`):
-```env
+   ```env
 ADMIN_USER=site_owner
 ADMIN_PASSWORD_FILE=/run/secrets/wp_admin_password
 ADMIN_EMAIL=admin@42.fr
@@ -175,7 +175,7 @@ SQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
 
 #### Change WordPress Admin Password
 
-1. Access the admin panel: `https://your-domain.com/wp-admin`
+1. Access the admin panel: `https://ezeppa.42.fr/wp-admin`
 2. Go to **Users** → **Administrator**
 3. Click **Edit**
 4. Scroll to **New Password** and generate a new one
@@ -199,7 +199,7 @@ SQL_ROOT_PASSWORD_FILE=/run/secrets/db_root_password
 
 4. Remove old data (containers will recreate the database):
    ```bash
-   rm -rf /home/your_login/data/mariadb/*
+   rm -rf /home/ezeppa/data/mariadb/*
    ```
 
 5. Restart:
@@ -253,14 +253,14 @@ docker-compose logs mariadb
 ### Verify Website Accessibility
 
 Open your browser and check:
-1. `https://your-domain.com` - Should load the homepage
-2. `https://your-domain.com/wp-admin` - Should show login form
+1. `https://ezeppa.42.fr` - Should load the homepage
+2. `https://ezeppa.42.fr/wp-admin` - Should show login form
 
 ### Verify Database Connectivity
 
 To check if WordPress can connect to the database:
 
-1. Go to WordPress admin: `https://your-domain.com/wp-admin`
+1. Go to WordPress admin: `https://ezeppa.42.fr/wp-admin`
 2. If the login page loads, database is working
 3. If you get "Error establishing database connection", database is down
 
@@ -321,7 +321,7 @@ The certificate is self-signed (not from a trusted authority).
 - Firefox: Click "Advanced" → "Accept the Risk and Continue"
 - Safari: Continue anyway
 
-### Issue: Cannot Access `your-domain.com`
+### Issue: Cannot Access `ezeppa.42.fr`
 
 **Cause**: Domain not configured in hosts file or `.env`.
 
@@ -334,7 +334,7 @@ The certificate is self-signed (not from a trusted authority).
 2. Verify hosts file has the same domain:
    ```bash
    sudo nano /etc/hosts
-   # Should have: 127.0.0.1 your-domain.com
+   # Should have: 127.0.0.1 ezeppa.42.fr
    ```
 
 3. Clear browser cache and try again
@@ -358,7 +358,7 @@ The certificate is self-signed (not from a trusted authority).
 3. Reset everything (deletes all content):
    ```bash
    make fclean
-   rm -rf /home/your_login/data/*
+   rm -rf /home/ezeppa/data/*
    make up
    ```
 
@@ -376,9 +376,9 @@ make logs
 
 **Fix permissions**:
 ```bash
-chmod 755 /home/your_login/data
-chmod 777 /home/your_login/data/wordpress
-chmod 777 /home/your_login/data/mariadb
+chmod 755 /home/ezeppa/data
+chmod 777 /home/ezeppa/data/wordpress
+chmod 777 /home/ezeppa/data/mariadb
 ```
 
 ### Issue: Cannot Write to WordPress (Permission Denied)
@@ -387,9 +387,9 @@ chmod 777 /home/your_login/data/mariadb
 
 **Solution**:
 ```bash
-# Make data directory writable (replace your_login with your login)
-sudo chown -R 33:33 /home/your_login/data/wordpress
-sudo chmod -R 755 /home/your_login/data/wordpress
+# Make data directory writable
+sudo chown -R 33:33 /home/ezeppa/data/wordpress
+sudo chmod -R 755 /home/ezeppa/data/wordpress
 ```
 
 (33 is the www-data user ID inside containers)

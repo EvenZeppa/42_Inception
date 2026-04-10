@@ -49,7 +49,7 @@ make --version
 ### 1. Clone the Repository
 
 ```bash
-cd /Users/dev/Documents/Workspace/Doker/Inception
+cd /home/ezeppa/Documents/Workspace/Inception
 ```
 
 ### 2. Configure Environment Variables
@@ -63,7 +63,7 @@ nano srcs/.env
 **Required variables**:
 ```env
 # Domain configuration
-DOMAIN_NAME=vbonnard.42.fr
+DOMAIN_NAME=ezeppa.42.fr
 
 # Database
 SQL_DATABASE=wordpress
@@ -91,14 +91,14 @@ USER_EMAIL=user@example.com
 ### 3. Create Data Directories
 
 ```bash
-# Create host directories (replace your_login with your 42 login)
-mkdir -p /home/your_login/data/wordpress
-mkdir -p /home/your_login/data/mariadb
+# Create host directories
+mkdir -p /home/ezeppa/data/wordpress
+mkdir -p /home/ezeppa/data/mariadb
 
 # Set proper permissions
-chmod 755 /home/your_login/data
-chmod 777 /home/your_login/data/wordpress
-chmod 777 /home/your_login/data/mariadb
+chmod 755 /home/ezeppa/data
+chmod 777 /home/ezeppa/data/wordpress
+chmod 777 /home/ezeppa/data/mariadb
 ```
 
 **Why**: Docker volumes store data in these paths (as required by the subject). The `make up` command creates them automatically.
@@ -107,10 +107,10 @@ chmod 777 /home/your_login/data/mariadb
 
 ```bash
 # Add entry to /etc/hosts
-echo "127.0.0.1 your-domain.com" | sudo tee -a /etc/hosts
+echo "127.0.0.1 ezeppa.42.fr" | sudo tee -a /etc/hosts
 ```
 
-Replace `your-domain.com` with the value of `DOMAIN_NAME` from your `.env`.
+Replace `ezeppa.42.fr` with the value of `DOMAIN_NAME` from your `.env` if needed.
 
 ## Building the Project
 
@@ -353,11 +353,11 @@ Replace <login> with your 42 login (LOGIN_NAME from .env).
 ### Backup Data
 
 ```bash
-# Backup WordPress files (replace your_login with your login)
-tar -czf wordpress_backup.tar.gz /home/your_login/data/wordpress/
+# Backup WordPress files
+tar -czf wordpress_backup.tar.gz /home/ezeppa/data/wordpress/
 
 # Backup database
-tar -czf mariadb_backup.tar.gz /home/your_login/data/mariadb/
+tar -czf mariadb_backup.tar.gz /home/ezeppa/data/mariadb/
 
 # Or directly from container
 docker-compose exec mariadb mysqldump -u root -p"${SQL_ROOT_PASSWORD}" --all-databases > backup.sql
@@ -382,9 +382,9 @@ docker-compose exec -T mariadb mysql -u root -p"${SQL_ROOT_PASSWORD}" < backup.s
 # Stop containers and remove volumes
 docker-compose down -v
 
-# Remove data directories (replace your_login with your login)
-rm -rf /home/your_login/data/wordpress/*
-rm -rf /home/your_login/data/mariadb/*
+# Remove data directories
+rm -rf /home/ezeppa/data/wordpress/*
+rm -rf /home/ezeppa/data/mariadb/*
 
 # Restart (will recreate from Dockerfiles)
 docker-compose up -d
@@ -560,7 +560,7 @@ Inception/
 1. Edit `srcs/requirements/mariadb/tools/setup.sh`
 2. Remove existing database data:
    ```bash
-   rm -rf /home/your_login/data/mariadb/*
+   rm -rf /home/ezeppa/data/mariadb/*
    ```
 3. Rebuild and restart:
    ```bash
@@ -575,13 +575,13 @@ docker-compose exec wordpress wp plugin install jetpack --activate --allow-root
 ```
 
 **Method 2: Manually in WordPress Admin**:
-1. Access `https://your-domain.com/wp-admin`
+1. Access `https://ezeppa.42.fr/wp-admin`
 2. Go to **Plugins** → **Add New**
 3. Search and install
 
 **Method 3: Direct file copy** (for development):
 ```bash
-cp -r /path/to/plugin /home/your_login/data/wordpress/wp-content/plugins/
+cp -r /path/to/plugin /home/ezeppa/data/wordpress/wp-content/plugins/
 ```
 
 ### Installing WordPress Themes
@@ -636,8 +636,8 @@ docker stats --no-stream
 docker-compose exec mariadb iostat -x 1 5
 
 # Check disk usage
-du -sh /home/your_login/data/wordpress
-du -sh /home/your_login/data/mariadb
+du -sh /home/ezeppa/data/wordpress
+du -sh /home/ezeppa/data/mariadb
 ```
 
 ### Network Diagnostics
