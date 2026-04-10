@@ -4,7 +4,7 @@ services:
     image: nginx
     container_name: nginx-container
     ports:
-      - 443:443
+      - "${NGINX_HTTPS_PORT:-443}:443"
     stdin_open: true
     tty: true
     depends_on:
@@ -99,8 +99,8 @@ services:
     container_name: ftp-container
     restart: always
     ports:
-      - "21:21"
-      - "21000-21010:21000-21010"
+      - "${FTP_PORT:-21}:21"
+      - "${FTP_PASSIVE_PORTS:-21000-21010}:21000-21010"
     volumes:
       - wordpress_data:/var/www/html
     networks:

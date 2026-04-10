@@ -1,4 +1,4 @@
-.PHONY: help up down build rebuild ps logs stop start clean fclean re env
+.PHONY: help up down build rebuild ps logs stop start clean fclean re env ports set-port
 
 # Colors for output
 GREEN  := \033[0;32m
@@ -49,6 +49,7 @@ help:
 	@echo "  $(YELLOW)make logs-nginx$(NC)  - Show Nginx logs"
 	@echo "  $(YELLOW)make logs-wp$(NC)     - Show WordPress logs"
 	@echo "  $(YELLOW)make logs-db$(NC)     - Show MariaDB logs"
+	@echo "  $(YELLOW)make logs-redis$(NC)  - Show Redis logs"
 	@echo "  $(YELLOW)make stats$(NC)       - Show container resource usage"
 	@echo ""
 	@echo "$(GREEN)Container Management:$(NC)"
@@ -67,6 +68,9 @@ help:
 	@echo "$(GREEN)Utility Commands:$(NC)"
 	@echo "  $(YELLOW)make help$(NC)        - Show this help message"
 	@echo "  $(YELLOW)make status$(NC)      - Quick status check"
+	@echo "  $(YELLOW)make test-redis$(NC)  - Validate Redis integration"
+	@echo "  $(YELLOW)make ports$(NC)       - Show current published ports from .env"
+	@echo "  $(YELLOW)make set-port SERVICE=NGINX_HTTPS_PORT VALUE=8443$(NC) - Update one port in srcs/.env"
 	@echo ""
 
 # ╔═══════════════════════════════════════════════════════════╗
@@ -175,6 +179,9 @@ logs-wp:
 logs-db:
 	@$(COMPOSE_CMD) logs -f mariadb
 
+logs-redis:
+	@$(COMPOSE_CMD) logs -f redis
+
 stats:
 	@docker stats --no-stream
 
@@ -262,6 +269,38 @@ test-wp:
 	@echo "$(BLUE)[*] Testing WordPress connectivity...$(NC)"
 	@$(COMPOSE_CMD) exec wordpress wp --allow-root user list 2>/dev/null && echo "$(GREEN)[✓] WordPress is healthy!$(NC)" || echo "$(YELLOW)[!] WordPress still initializing...$(NC)"
 
+test-redis:
+	@echo "$(BLUE)[*] Testing Redis service...$(NC)"
+	@$(COMPOSE_CMD) exec redis redis-cli ping | grep -q PONG \
+		&& echo "$(GREEN)[✓] Redis responds to PING (PONG).$(NC)" \
+		|| (echo "$(RED)[✗] Redis is not responding.$(NC)"; exit 1)
+	@echo "$(BLUE)[*] Checking WordPress Redis plugin...$(NC)"
+	@$(COMPOSE_CMD) exec wordpress wp plugin is-active redis-cache --allow-root >/dev/null 2>&1 \
+		&& echo "$(GREEN)[✓] redis-cache plugin is active in WordPress.$(NC)" \
+		|| (echo "$(RED)[✗] redis-cache plugin is not active.$(NC)"; exit 1)
+	@echo "$(BLUE)[*] Checking WordPress Redis host config...$(NC)"
+	@$(COMPOSE_CMD) exec wordpress wp config get WP_REDIS_HOST --allow-root 2>/dev/null | grep -q '^redis$$' \
+		&& echo "$(GREEN)[✓] WordPress is configured to use Redis host.$(NC)" \
+		|| (echo "$(RED)[✗] WP_REDIS_HOST is missing or invalid.$(NC)"; exit 1)
+
+ports:
+	@echo "$(BLUE)╔═ Published Ports (.env) ═╗$(NC)"
+	@grep -E '^(NGINX_HTTPS_PORT|FTP_PORT|FTP_PASSIVE_PORTS)=' srcs/.env 2>/dev/null || echo "  No explicit port overrides in srcs/.env"
+	@echo "$(BLUE)╚═══════════════════════════╝$(NC)"
+
+set-port:
+	@if [ -z "$(SERVICE)" ] || [ -z "$(VALUE)" ]; then \
+		echo "$(RED)Usage: make set-port SERVICE=NGINX_HTTPS_PORT VALUE=8443$(NC)"; \
+		exit 1; \
+	fi
+	@if ! grep -q "^$(SERVICE)=" srcs/.env; then \
+		echo "$(RED)[!] $(SERVICE) not found in srcs/.env$(NC)"; \
+		exit 1; \
+	fi
+	@sed -i "s/^$(SERVICE)=.*/$(SERVICE)=$(VALUE)/" srcs/.env
+	@echo "$(GREEN)[✓] Updated $(SERVICE)=$(VALUE) in srcs/.env$(NC)"
+	@echo "$(YELLOW)[!] Restart stack to apply: make down && make up$(NC)"
+
 info:
 	@echo "$(BLUE)╔═ Project Information ═╗$(NC)"
 	@echo "$(GREEN)Project:$(NC) Inception (42 Curriculum)"
@@ -274,4 +313,4 @@ info:
 # ║                   .PHONY DECLARATION                      ║
 # ╚═══════════════════════════════════════════════════════════╝
 
-.PHONY: help up down down-v rebuild re build build-nginx build-wp build-db build-adminer build-static ps logs logs-nginx logs-wp logs-db stats status start stop restart shell-wp shell-db shell-nginx clean fclean prune validate test-db test-wp info env
+.PHONY: help up down down-v rebuild re build build-nginx build-wp build-db build-adminer build-static ps logs logs-nginx logs-wp logs-db logs-redis stats status start stop restart shell-wp shell-db shell-nginx clean fclean prune validate test-db test-wp test-redis info env ports set-port
