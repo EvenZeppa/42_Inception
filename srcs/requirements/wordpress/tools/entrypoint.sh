@@ -41,6 +41,11 @@ require_var "USER_LOGIN"
 require_var "USER_PASS"
 require_var "USER_EMAIL"
 
+SITE_URL="https://${DOMAIN_NAME}"
+if [ -n "${NGINX_HTTPS_PORT:-}" ] && [ "${NGINX_HTTPS_PORT}" != "443" ]; then
+    SITE_URL="https://${DOMAIN_NAME}:${NGINX_HTTPS_PORT}"
+fi
+
 echo "${ADMIN_USER}" | grep -qi "admin" && { echo "ADMIN_USER invalide"; exit 1; }
 echo "${USER_LOGIN}" | grep -qi "admin" && { echo "USER_LOGIN invalide"; exit 1; }
 if [ "${ADMIN_USER}" = "${USER_LOGIN}" ]; then
@@ -115,7 +120,7 @@ EOF
 #    core install : Remplit les tables de la base de données et crée le compte Administrateur.
 #	 user create : Crée le second utilisateur (rôle author).
     wp core install \
-        --url=$DOMAIN_NAME \
+        --url="$SITE_URL" \
         --title=$SITE_TITLE \
         --admin_user=$ADMIN_USER \
         --admin_password=$ADMIN_PASSWORD \
@@ -128,6 +133,9 @@ EOF
 fi
 
 if wp core is-installed --allow-root >/dev/null 2>&1; then
+    wp option update home "$SITE_URL" --allow-root >/dev/null 2>&1 || true
+    wp option update siteurl "$SITE_URL" --allow-root >/dev/null 2>&1 || true
+
     existing_id="$(wp user list --search="$ADMIN_EMAIL" --search-columns=user_email --field=ID --allow-root 2>/dev/null | head -n 1 || true)"
     if [ -n "${existing_id}" ]; then
         existing_login="$(wp user get "${existing_id}" --field=user_login --allow-root 2>/dev/null || true)"
