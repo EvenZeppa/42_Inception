@@ -1,0 +1,14 @@
+# Sécurité
+.env
+
+# Secrets (à stocker localement, jamais commit)
+secrets/
+
+# Sujet et docs
+*.pdf
+
+# Système (Mac)
+.DS_Store
+
+# Données locales
+data/

@@ -1,0 +1,140 @@
+services:
+  nginx:
+    build: ./requirements/nginx/
+    image: nginx
+    container_name: nginx-container
+    ports:
+      - 443:443
+    stdin_open: true
+    tty: true
+    depends_on:
+      - wordpress
+      - adminer
+      - static-site
+    restart: always
+    volumes:
+      - wordpress_data:/var/www/html
+    env_file:
+      - .env
+    networks:
+      - inception
+
+  wordpress:
+    build: ./requirements/wordpress/
+    image: wordpress
+    container_name: wordpress-container
+    restart: always
+    expose:
+      - 9000
+    depends_on:
+      - mariadb
+      - redis
+    networks:
+      - inception
+    volumes:
+      - wordpress_data:/var/www/html
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
+  
+  mariadb:
+    build: ./requirements/mariadb/
+    image: mariadb
+    container_name: mariadb-container
+    restart: always
+    expose:
+      - 3306
+    networks:
+      inception:
+        aliases:
+          - mariadb
+          - mariadb-container
+          - db
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    env_file:
+      - .env
+    secrets:
+      - db_password
+      - db_root_password
+
+  adminer:
+    build: ./requirements/adminer/
+    image: adminer
+    container_name: adminer-container
+    restart: always
+    expose:
+      - 8080
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+
+  static-site:
+    build: ./requirements/static-site/
+    image: static-site
+    container_name: static-site-container
+    restart: always
+    expose:
+      - 8080
+    networks:
+      - inception
+
+  redis:
+    build: ./requirements/redis/
+    image: redis
+    container_name: redis-container
+    restart: always
+    expose:
+      - 6379
+    networks:
+      - inception
+
+  ftp:
+    build: ./requirements/ftp/
+    image: ftp
+    container_name: ftp-container
+    restart: always
+    ports:
+      - "21:21"
+      - "21000-21010:21000-21010"
+    volumes:
+      - wordpress_data:/var/www/html
+    networks:
+      - inception
+    secrets:
+      - ftp_password
+
+volumes:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/wordpress
+  
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR}/mariadb
+
+networks:
+  inception:
+    name: inception
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
+  ftp_password:
+    file: ../secrets/ftp_password.txt
